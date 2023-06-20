@@ -6,7 +6,7 @@
 use crate::logging::{LogEntry, LogEvent, LogSchema};
 use std::ops::DerefMut;
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use futures::StreamExt;
 use rand::Rng;
 use rand::rngs::OsRng;
@@ -29,14 +29,16 @@ pub async fn directsend_sentwork_perf_worker(
     let ticker = time_service.interval(interval);
     futures::pin_mut!(ticker);
 
-    let mut counter : u64 = 0;
-
     // random payload filler
     let mut blob = Vec::<u8>::with_capacity(data_size as usize);
     let mut rng = OsRng;
     for _ in 0..data_size {
         blob.push(rng.gen());
     }
+
+    let mut counter : u64 = rng.gen();
+
+    let mut next_blab : i64 = 0;
 
     loop {
         ticker.next().await;
@@ -53,8 +55,7 @@ pub async fn directsend_sentwork_perf_worker(
             },
         };
 
-        // let now = time_service.now();
-        let nowu = time_service.now_unix_time();
+        let nowu = time_service.now_unix_time().as_micros() as i64;
         for peer_network_id in all_peers {
             counter += 1;
 
@@ -67,22 +68,30 @@ pub async fn directsend_sentwork_perf_worker(
 
             let msg = PeerMonitoringServiceMessage::DirectNetPerformance(DirectNetPerformanceMessage{
                 request_counter: counter,
-                send_micros: nowu.as_micros() as i64,
+                send_micros: nowu,
                 data: blob.clone(),
             });
             // TODO: log & count this send?
             {
                 shared.write().unwrap().set(SendRecord{
                     request_counter: counter,
-                    send_micros: nowu.as_micros() as i64,
+                    send_micros: nowu,
                     bytes_sent: blob.len(),
                 })
             }
+            let start_send : Instant = time_service.now();
             let result = peer_monitoring_client.send_direct(peer_network_id, msg).await;
+            let send_end : Instant = time_service.now();
             if let Err(err) = result {
                 info!("PM direct send err: {}", err);
+            } else {
+                let send_dt = send_end.duration_since(start_send);
+                info!("pmd[{}] at {} µs, took {} µs", counter, nowu, send_dt.as_micros());
             }
         }
-        info!("PM direct sent counter={}", counter);
+        if nowu > next_blab {
+            info!("PM direct sent counter={}", counter);
+            next_blab += 20_000;
+        }
     }
 }

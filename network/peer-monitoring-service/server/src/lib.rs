@@ -115,21 +115,27 @@ impl<T: StorageReaderInterface> PeerMonitoringServiceServer<T> {
                                         self.shared.read().unwrap().find(msg.request_counter)
                                     };
                                     if rec.request_counter == msg.request_counter {
-                                        info!("pmd[{}] {} bytes in {} micros", rec.request_counter, rec.bytes_sent, receive_time - rec.send_micros);
+                                        info!("pmd[{}] {} bytes at {} in {} micros", rec.request_counter, rec.bytes_sent, receive_time, receive_time - rec.send_micros);
                                     } else {
                                         info!("pmd[{}] unk bytes in > {} micros", msg.request_counter, receive_time - rec.send_micros)
                                     }
                             } else {
                                 // make a reply, empty data, local time, request counter from source
+                                let nowu = self.time_service.now_unix_time().as_micros();
                                 let reply = DirectNetPerformanceMessage{
                                     request_counter: msg.request_counter,
-                                    send_micros: self.time_service.now_unix_time().as_micros() as i64,
+                                    send_micros: nowu as i64,
                                     data: vec![],
                                 };
                                 let reply = PeerMonitoringServiceMessage::DirectNetPerformance(reply);
+                                let send_start : Instant = self.time_service.now();
                                 let send_ok = network_client.send_to_peer(reply, PeerNetworkId::new(network_id, peer_id)); // TODO: log&count error
+                                let send_end : Instant = self.time_service.now();
                                 if let Err(err) = send_ok {
                                     info!("pmd[{}] reply send failed: {}", msg.request_counter, err);
+                                } else {
+                                    let dt = send_end.duration_since(send_start);
+                                    info!("pmd[{}] reply at {} µs, sent in {} µs", msg.request_counter, nowu, dt.as_micros())
                                 }
                             }
                         }
