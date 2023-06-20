@@ -2299,6 +2299,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "aptos-network2"
+version = "0.1.0"
+dependencies = [
+ "tokio",
+]
+
+[[package]]
 name = "aptos-node"
 version = "1.5.0"
 dependencies = [

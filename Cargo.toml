@@ -116,6 +116,7 @@ members = [
     "network/peer-monitoring-service/client",
     "network/peer-monitoring-service/server",
     "network/peer-monitoring-service/types",
+    "network2",
     "sdk",
     "secure/net",
     "secure/storage",
@@ -325,6 +326,7 @@ aptos-network = { path = "network" }
 aptos-network-builder = { path = "network/builder" }
 aptos-network-checker = { path = "crates/aptos-network-checker" }
 aptos-network-discovery = { path = "network/discovery" }
+aptos-network2 = { path = "network2" }
 aptos-node = { path = "aptos-node" }
 aptos-node-checker = { path = "ecosystem/node-checker" }
 aptos-node-identity = { path = "crates/aptos-node-identity" }
