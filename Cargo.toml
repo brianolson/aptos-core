@@ -109,6 +109,7 @@ members = [
     "execution/executor-types",
     "mempool",
     "network",
+    "network/benchmark",
     "network/builder",
     "network/discovery",
     "network/memsocket",
@@ -322,6 +323,7 @@ aptos-moving-average = { path = "crates/moving-average" }
 aptos-mvhashmap = { path = "aptos-move/mvhashmap" }
 aptos-netcore = { path = "network/netcore" }
 aptos-network = { path = "network" }
+aptos-network-benchmark = { path = "network/benchmark" }
 aptos-network-builder = { path = "network/builder" }
 aptos-network-checker = { path = "crates/aptos-network-checker" }
 aptos-network-discovery = { path = "network/discovery" }

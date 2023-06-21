@@ -14,7 +14,7 @@ pub static PENDING_PEER_MONITORING_SERVER_NETWORK_EVENTS: Lazy<IntCounterVec> = 
         "Counters for pending network events for the peer monitoring server",
         &["state"]
     )
-    .unwrap()
+        .unwrap()
 });
 
 /// Counter for the peer monitoring service errors encountered

@@ -20,6 +20,7 @@ use std::{
     collections::HashMap,
     path::{Path, PathBuf},
 };
+use crate::config::benchmark::BenchmarkConfig;
 
 /// The node configuration defines the configuration for a single Aptos
 /// node (i.e., validator or fullnode). It is composed of module
@@ -58,6 +59,8 @@ pub struct NodeConfig {
     pub storage: StorageConfig,
     #[serde(default)]
     pub validator_network: Option<NetworkConfig>,
+    #[serde(default)]
+    pub benchmark: Option<BenchmarkConfig>,
 }
 
 impl NodeConfig {

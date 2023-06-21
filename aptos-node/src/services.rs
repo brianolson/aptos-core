@@ -24,6 +24,7 @@ use futures::channel::{mpsc, mpsc::Sender};
 use std::{sync::Arc, time::Instant};
 use std::sync::RwLock;
 use tokio::runtime::Runtime;
+use aptos_network_benchmark::{BenchmarkMessage, run_benchmark_service};
 
 const AC_SMP_CHANNEL_BUFFER_SIZE: usize = 1_024;
 const INTRA_NODE_CHANNEL_BUFFER_SIZE: usize = 1;
@@ -180,6 +181,20 @@ pub fn start_peer_monitoring_service(
 
     // Return the runtime
     peer_monitoring_service_runtime
+}
+
+pub fn start_benchmark_service(
+    node_config: &NodeConfig,
+    network_interfaces: ApplicationNetworkInterfaces<BenchmarkMessage>,
+) -> tokio::runtime::Runtime {
+    let network_client = network_interfaces.network_client;
+    let runtime = aptos_runtimes::spawn_named_runtime("benchmark".into(), node_config.benchmark.unwrap().benchmark_service_threads);
+    runtime.spawn(run_benchmark_service(
+        network_client,
+        network_interfaces.network_service_events,
+        TimeService::real(),
+    ));
+    return runtime
 }
 
 /// Starts the telemetry service and grabs the build information

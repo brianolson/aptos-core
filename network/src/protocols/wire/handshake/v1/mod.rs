@@ -57,6 +57,8 @@ pub enum ProtocolId {
     ConsensusRpcCompressed = 11,
     ConsensusDirectSendCompressed = 12,
     PeerMonitoringDirectSend = 13,
+    BenchmarkDirectSend = 14,
+    BenchmarkRpc = 15,
 }
 
 /// The encoding types for Protocols
@@ -84,6 +86,8 @@ impl ProtocolId {
             ConsensusRpcCompressed => "ConsensusRpcCompressed",
             ConsensusDirectSendCompressed => "ConsensusDirectSendCompressed",
             PeerMonitoringDirectSend => "PeerMonitoringDirectSend",
+            BenchmarkDirectSend => "BenchmarkDirectSend",
+            BenchmarkRpc => "BenchmarkRpc",
         }
     }
 
@@ -103,6 +107,8 @@ impl ProtocolId {
             ProtocolId::ConsensusRpcCompressed,
             ProtocolId::ConsensusDirectSendCompressed,
             ProtocolId::PeerMonitoringDirectSend,
+            ProtocolId::BenchmarkRpc,
+            ProtocolId::BenchmarkDirectSend,
         ]
     }
 
