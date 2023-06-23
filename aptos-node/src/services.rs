@@ -24,7 +24,7 @@ use futures::channel::{mpsc, mpsc::Sender};
 use std::{sync::Arc, time::Instant};
 use std::sync::RwLock;
 use tokio::runtime::Runtime;
-use aptos_network_benchmark::{BenchmarkMessage, run_benchmark_service};
+use aptos_network_benchmark::{BenchmarkMessage, BenchmarkSharedState, run_benchmark_service};
 
 const AC_SMP_CHANNEL_BUFFER_SIZE: usize = 1_024;
 const INTRA_NODE_CHANNEL_BUFFER_SIZE: usize = 1;
@@ -191,10 +191,12 @@ pub fn start_benchmark_service(
 ) -> tokio::runtime::Runtime {
     let network_client = network_interfaces.network_client;
     let runtime = aptos_runtimes::spawn_named_runtime("benchmark".into(), node_config.benchmark.unwrap().benchmark_service_threads);
+    let shared = Arc::new(tokio::sync::RwLock::new(BenchmarkSharedState::new()));
     runtime.spawn(run_benchmark_service(
         network_client,
         network_interfaces.network_service_events,
         TimeService::real(),
+        shared,
     ));
     return runtime
 }

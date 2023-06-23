@@ -2235,10 +2235,14 @@ name = "aptos-network-benchmark"
 version = "0.1.0"
 dependencies = [
  "aptos-config",
+ "aptos-logger",
  "aptos-metrics-core",
  "aptos-network",
  "aptos-runtimes",
  "aptos-time-service",
+ "aptos-types",
+ "bytes",
+ "futures",
  "once_cell",
  "serde 1.0.149",
  "tokio",
