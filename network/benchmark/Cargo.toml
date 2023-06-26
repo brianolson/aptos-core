@@ -13,6 +13,8 @@ aptos-network = { workspace = true }
 aptos-runtimes = { workspace = true }
 aptos-time-service = { workspace = true }
 aptos-types = { workspace = true }
+
+async-channel = { workspace = true }
 bytes = { workspace = true }
 futures = { workspace = true }
 once_cell = { workspace = true }

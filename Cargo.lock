@@ -2241,6 +2241,7 @@ dependencies = [
  "aptos-runtimes",
  "aptos-time-service",
  "aptos-types",
+ "async-channel",
  "bytes",
  "futures",
  "once_cell",

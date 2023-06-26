@@ -299,9 +299,12 @@ pub fn setup_networks_and_get_interfaces(
             benchmark_network_configuration(node_config).unwrap(),
             peers_and_metadata.clone(),
         );
-        let benchmark_runtime = start_benchmark_service(
+        let benchmark_service_threads = node_config.benchmark.unwrap().benchmark_service_threads;
+        let benchmark_runtime = aptos_runtimes::spawn_named_runtime("benchmark".into(), benchmark_service_threads);
+        start_benchmark_service(
             &node_config,
             benchmark_interfaces,
+            benchmark_runtime.handle(),
         );
         network_runtimes.push(benchmark_runtime);
     }
