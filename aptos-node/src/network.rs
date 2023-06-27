@@ -131,7 +131,7 @@ pub fn benchmark_network_configuration(node_config: &NodeConfig) -> Option<Netwo
         None => {return None}
         Some(x) => x,
     };
-    if !cfg.enable_benchmark_service { return None }
+    if !cfg.enabled { return None }
     let direct_send_protocols = vec![ProtocolId::BenchmarkDirectSend];
     let rpc_protocols = vec![ProtocolId::BenchmarkRpc];
     let network_client_config = NetworkClientConfig::new(

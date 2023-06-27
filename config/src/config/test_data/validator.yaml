@@ -79,3 +79,9 @@ validator_network:
     max_frame_size: 4194304 # 4 MiB
 api:
     enabled: true
+benchmark:
+  enabled: true
+  max_network_channel_size: 1000
+  enable_direct_send_testing: true
+  direct_send_data_size: 100000
+  direct_send_per_second: 1000

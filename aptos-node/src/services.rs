@@ -191,10 +191,11 @@ pub fn start_benchmark_service(
     runtime: &Handle,
 ) {
     let network_client = network_interfaces.network_client;
-    let benchmark_service_threads = node_config.benchmark.unwrap().benchmark_service_threads;
+    // let benchmark_service_threads = node_config.benchmark.unwrap().benchmark_service_threads;
     let shared = Arc::new(tokio::sync::RwLock::new(BenchmarkSharedState::new()));
     runtime.spawn(run_benchmark_service(
-        benchmark_service_threads,
+        // benchmark_service_threads,
+        node_config.clone(),
         // runtime,
         network_client,
         network_interfaces.network_service_events,
