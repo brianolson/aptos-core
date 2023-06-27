@@ -82,6 +82,10 @@ api:
 benchmark:
   enabled: true
   max_network_channel_size: 1000
-  enable_direct_send_testing: true
+  enable_direct_send_testing: false
   direct_send_data_size: 100000
   direct_send_per_second: 1000
+  enable_rpc_testing: true
+  rpc_data_size: 100000
+  rpc_per_second: 1000
+  rpc_in_flight: 8
