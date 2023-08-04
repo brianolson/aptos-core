@@ -2302,6 +2302,7 @@ dependencies = [
 name = "aptos-network2"
 version = "0.1.0"
 dependencies = [
+ "aptos-types",
  "tokio",
 ]
 

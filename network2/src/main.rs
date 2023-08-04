@@ -1,11 +1,29 @@
 // Copyright © Aptos Foundation
 
 use std::net::SocketAddr;
+use std::str::FromStr;
+use std::io::Result;
 use tokio::net::TcpListener;
+use aptos_types::network_address::NetworkAddress;
+use aptos_network2::util::listen;
 
 fn main() {
+    match result_main() {
+        Err(e) => {
+            println!("err: {}", e);
+        }
+        Ok(_) => {
+            println!("Ok!");
+        }
+    }
+}
+
+fn result_main() -> Result<()> {
+    let na = NetworkAddress::from_str("/ip4/127.0.0.1/tcp/8301").map_err(|e| Error::)?;
+    let wat = listen(na)?;
     println!("Hello, world!");
 }
+
 
 pub struct Network {
     peers: Vec<Peer>,
