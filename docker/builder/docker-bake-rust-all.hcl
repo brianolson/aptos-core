@@ -22,8 +22,6 @@ variable "BUILT_VIA_BUILDKIT" {}
 
 variable "GCP_DOCKER_ARTIFACT_REPO" {}
 
-variable "GCP_DOCKER_ARTIFACT_REPO_US" {}
-
 variable "AWS_ECR_ACCOUNT_NUM" {}
 
 variable "TARGET_REGISTRY" {
@@ -68,7 +66,7 @@ group "forge-images" {
 target "debian-base" {
   dockerfile = "docker/builder/debian-base.Dockerfile"
   contexts = {
-    debian = "docker-image://debian:bullseye@sha256:1bf0e24813ee8306c3fba1fe074793eb91c15ee580b61fff7f3f41662bc0031d"
+    debian = "docker-image://debian:bullseye@sha256:2c407480ad7c98bdc551dbb38b92acb674dc130c8298f2e0fa2ad34da9078637"
   }
 }
 
@@ -77,7 +75,7 @@ target "builder-base" {
   target     = "builder-base"
   context    = "."
   contexts = {
-    rust = "docker-image://rust:1.66.1-bullseye@sha256:f72949bcf1daf8954c0e0ed8b7e10ac4c641608f6aa5f0ef7c172c49f35bd9b5"
+    rust = "docker-image://rust:1.71.1-bullseye@sha256:6b5a53fef2818e28548be943a622bfc52d73920fe0f8784f4296227bca30cdf1"
   }
   args = {
     PROFILE            = "${PROFILE}"
@@ -235,16 +233,12 @@ function "generate_tags" {
   result = TARGET_REGISTRY == "remote-all" ? [
     "${GCP_DOCKER_ARTIFACT_REPO}/${target}:${IMAGE_TAG_PREFIX}${GIT_SHA}",
     "${GCP_DOCKER_ARTIFACT_REPO}/${target}:${IMAGE_TAG_PREFIX}${NORMALIZED_GIT_BRANCH_OR_PR}",
-    "${GCP_DOCKER_ARTIFACT_REPO_US}/${target}:${IMAGE_TAG_PREFIX}${GIT_SHA}",
-    "${GCP_DOCKER_ARTIFACT_REPO_US}/${target}:${IMAGE_TAG_PREFIX}${NORMALIZED_GIT_BRANCH_OR_PR}",
     "${ecr_base}/${target}:${IMAGE_TAG_PREFIX}${GIT_SHA}",
     "${ecr_base}/${target}:${IMAGE_TAG_PREFIX}${NORMALIZED_GIT_BRANCH_OR_PR}",
     ] : (
     TARGET_REGISTRY == "gcp" || TARGET_REGISTRY == "remote" ? [
       "${GCP_DOCKER_ARTIFACT_REPO}/${target}:${IMAGE_TAG_PREFIX}${GIT_SHA}",
       "${GCP_DOCKER_ARTIFACT_REPO}/${target}:${IMAGE_TAG_PREFIX}${NORMALIZED_GIT_BRANCH_OR_PR}",
-      "${GCP_DOCKER_ARTIFACT_REPO_US}/${target}:${IMAGE_TAG_PREFIX}${GIT_SHA}",
-      "${GCP_DOCKER_ARTIFACT_REPO_US}/${target}:${IMAGE_TAG_PREFIX}${NORMALIZED_GIT_BRANCH_OR_PR}",
       ] : [ // "local" or any other value
       "aptos-core/${target}:${IMAGE_TAG_PREFIX}${GIT_SHA}-from-local",
       "aptos-core/${target}:${IMAGE_TAG_PREFIX}from-local",

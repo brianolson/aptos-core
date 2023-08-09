@@ -38,22 +38,22 @@ struct PrunerOpt {
     #[clap(long)]
     enable_ledger_pruner: bool,
 
-    #[clap(long, default_value = "100000")]
+    #[clap(long, default_value_t = 100000)]
     state_prune_window: u64,
 
-    #[clap(long, default_value = "100000")]
+    #[clap(long, default_value_t = 100000)]
     epoch_snapshot_prune_window: u64,
 
-    #[clap(long, default_value = "100000")]
+    #[clap(long, default_value_t = 100000)]
     ledger_prune_window: u64,
 
-    #[clap(long, default_value = "500")]
+    #[clap(long, default_value_t = 500)]
     ledger_pruning_batch_size: usize,
 
-    #[clap(long, default_value = "500")]
+    #[clap(long, default_value_t = 500)]
     state_pruning_batch_size: usize,
 
-    #[clap(long, default_value = "500")]
+    #[clap(long, default_value_t = 500)]
     epoch_snapshot_pruning_batch_size: usize,
 }
 
@@ -92,6 +92,12 @@ pub struct PipelineOpt {
     allow_discards: bool,
     #[clap(long)]
     allow_aborts: bool,
+    #[clap(long, default_value = "1")]
+    num_executor_shards: usize,
+    #[clap(long)]
+    async_partitioning: bool,
+    #[clap(long)]
+    use_global_executor: bool,
 }
 
 impl PipelineOpt {
@@ -102,23 +108,28 @@ impl PipelineOpt {
             skip_commit: self.skip_commit,
             allow_discards: self.allow_discards,
             allow_aborts: self.allow_aborts,
+            num_executor_shards: self.num_executor_shards,
+            async_partitioning: self.async_partitioning,
+            use_global_executor: self.use_global_executor,
         }
     }
 }
 
 #[derive(Parser, Debug)]
 struct Opt {
-    #[clap(long, default_value = "10000")]
+    #[clap(long, default_value_t = 10000)]
     block_size: usize,
 
-    #[clap(long, default_value = "5")]
+    #[clap(long, default_value_t = 5)]
     transactions_per_sender: usize,
+
+    /// 0 implies random TX generation; if non-zero, then 'transactions_per_sender is ignored
+    /// 'connected_tx_grps' should be less than 'block_size'
+    #[clap(long, default_value_t = 0)]
+    connected_tx_grps: usize,
 
     #[clap(long)]
     concurrency_level: Option<usize>,
-
-    #[clap(long, default_value = "1")]
-    num_executor_shards: usize,
 
     #[clap(flatten)]
     pruner_opt: PrunerOpt,
@@ -128,6 +139,9 @@ struct Opt {
 
     #[clap(long)]
     use_sharded_state_merkle_db: bool,
+
+    #[clap(long)]
+    skip_index_and_usage: bool,
 
     #[clap(flatten)]
     pipeline_opt: PipelineOpt,
@@ -147,11 +161,11 @@ impl Opt {
     fn concurrency_level(&self) -> usize {
         match self.concurrency_level {
             None => {
-                let level =
-                    (num_cpus::get() as f64 / self.num_executor_shards as f64).ceil() as usize;
+                let level = (num_cpus::get() as f64 / self.pipeline_opt.num_executor_shards as f64)
+                    .ceil() as usize;
                 println!(
                     "\nVM concurrency level defaults to {} for number of shards {} \n",
-                    level, self.num_executor_shards
+                    level, self.pipeline_opt.num_executor_shards
                 );
                 level
             },
@@ -163,51 +177,59 @@ impl Opt {
 #[derive(Subcommand, Debug)]
 enum Command {
     CreateDb {
-        #[clap(long, parse(from_os_str))]
+        #[clap(long, value_parser)]
         data_dir: PathBuf,
 
-        #[clap(long, default_value = "1000000")]
+        #[clap(long, default_value_t = 1000000)]
         num_accounts: usize,
 
-        #[clap(long, default_value = "10000000000")]
+        #[clap(long, default_value_t = 10000000000)]
         init_account_balance: u64,
     },
     RunExecutor {
         /// number of transfer blocks to run
-        #[clap(long, default_value = "1000")]
+        #[clap(long, default_value_t = 1000)]
         blocks: usize,
 
-        #[clap(long, default_value = "1000000")]
+        #[clap(long, default_value_t = 1000000)]
         main_signer_accounts: usize,
 
-        #[clap(long, default_value = "0")]
+        #[clap(long, default_value_t = 0)]
         additional_dst_pool_accounts: usize,
 
         /// Workload (transaction type). Uses raw coin transfer if not set,
         /// and if set uses transaction-generator-lib to generate it
-        #[clap(long, arg_enum, ignore_case = true)]
-        transaction_type: Option<TransactionTypeArg>,
+        #[clap(
+            long,
+            value_enum,
+            num_args = 0..,
+            ignore_case = true
+        )]
+        transaction_type: Vec<TransactionTypeArg>,
 
-        #[clap(long, default_value = "1")]
+        #[clap(long, num_args = 0..)]
+        transaction_weights: Vec<usize>,
+
+        #[clap(long, default_value_t = 1)]
         module_working_set_size: usize,
 
-        #[clap(long, parse(from_os_str))]
+        #[clap(long, value_parser)]
         data_dir: PathBuf,
 
-        #[clap(long, parse(from_os_str))]
+        #[clap(long, value_parser)]
         checkpoint_dir: PathBuf,
     },
     AddAccounts {
-        #[clap(long, parse(from_os_str))]
+        #[clap(long, value_parser)]
         data_dir: PathBuf,
 
-        #[clap(long, parse(from_os_str))]
+        #[clap(long, value_parser)]
         checkpoint_dir: PathBuf,
 
-        #[clap(long, default_value = "1000000")]
+        #[clap(long, default_value_t = 1000000)]
         num_new_accounts: usize,
 
-        #[clap(long, default_value = "1000000")]
+        #[clap(long, default_value_t = 1000000)]
         init_account_balance: u64,
     },
 }
@@ -231,6 +253,7 @@ where
                 opt.verify_sequence_numbers,
                 opt.split_ledger_db,
                 opt.use_sharded_state_merkle_db,
+                opt.skip_index_and_usage,
                 opt.pipeline_opt.pipeline_config(),
             );
         },
@@ -239,15 +262,31 @@ where
             main_signer_accounts,
             additional_dst_pool_accounts,
             transaction_type,
+            transaction_weights,
             module_working_set_size,
             data_dir,
             checkpoint_dir,
         } => {
+            let transaction_mix = if transaction_type.is_empty() {
+                None
+            } else {
+                let mix_per_phase = TransactionTypeArg::args_to_transaction_mix_per_phase(
+                    &transaction_type,
+                    &transaction_weights,
+                    &[],
+                    module_working_set_size,
+                    false,
+                );
+                assert!(mix_per_phase.len() == 1);
+                Some(mix_per_phase[0].clone())
+            };
+
             aptos_executor_benchmark::run_benchmark::<E>(
                 opt.block_size,
                 blocks,
-                transaction_type.map(|t| t.materialize(module_working_set_size, false)),
+                transaction_mix,
                 opt.transactions_per_sender,
+                opt.connected_tx_grps,
                 main_signer_accounts,
                 additional_dst_pool_accounts,
                 data_dir,
@@ -256,6 +295,7 @@ where
                 opt.pruner_opt.pruner_config(),
                 opt.split_ledger_db,
                 opt.use_sharded_state_merkle_db,
+                opt.skip_index_and_usage,
                 opt.pipeline_opt.pipeline_config(),
             );
         },
@@ -275,6 +315,7 @@ where
                 opt.verify_sequence_numbers,
                 opt.split_ledger_db,
                 opt.use_sharded_state_merkle_db,
+                opt.skip_index_and_usage,
                 opt.pipeline_opt.pipeline_config(),
             );
         },
@@ -290,14 +331,16 @@ fn main() {
             .unwrap()
             .as_millis() as i64,
     );
-    let _mp = MetricsPusher::start_for_local_run("executor-benchmark");
-
     rayon::ThreadPoolBuilder::new()
         .thread_name(|index| format!("rayon-global-{}", index))
         .build_global()
         .expect("Failed to build rayon global thread pool.");
+
+    aptos_node_resource_metrics::register_node_metrics_collector();
+    let _mp = MetricsPusher::start_for_local_run("executor-benchmark");
+
     AptosVM::set_concurrency_level_once(opt.concurrency_level());
-    AptosVM::set_num_shards_once(opt.num_executor_shards);
+    AptosVM::set_num_shards_once(opt.pipeline_opt.num_executor_shards);
     NativeExecutor::set_concurrency_level_once(opt.concurrency_level());
 
     if opt.use_native_executor {
@@ -305,4 +348,10 @@ fn main() {
     } else {
         run::<AptosVM>(opt);
     }
+}
+
+#[test]
+fn verify_tool() {
+    use clap::CommandFactory;
+    Opt::command().debug_assert()
 }
