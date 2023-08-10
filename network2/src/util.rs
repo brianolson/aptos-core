@@ -39,7 +39,7 @@ pub fn listen(addr: NetworkAddress) -> Result<(tokio::net::TcpListener, NetworkA
     ))
 }
 
-fn invalid_addr_error(addr: &NetworkAddress) -> std::io::Error {
+pub fn invalid_addr_error(addr: &NetworkAddress) -> std::io::Error {
     std::io::Error::new(
         std::io::ErrorKind::InvalidInput,
         format!("Invalid NetworkAddress: '{}'", addr),
